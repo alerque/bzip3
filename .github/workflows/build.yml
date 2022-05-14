@@ -29,10 +29,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ ubuntu-latest, macos-latest ]
-        compiler: [ clang, gcc ]
-        feature: [ with-pthread, without-pthread ]
+        # platform: [ ubuntu-latest, macos-latest ]
+        platform: [ windows-latest ]
+        compiler: [ clang, gcc, msvc ]
+        # feature: [ with-pthread, without-pthread ]
+        feature: [ without-pthread ]
+        exclude:
+          - platform: ubuntu-latest
+            compiler: msvc
+          - platform: macos-latest
+            compiler: msvc
+          - platform: windows-latest
+            compiler: gcc
     runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: bash
     steps:
     - name: Download source package artifact
       uses: actions/download-artifact@v3
@@ -41,9 +53,9 @@ jobs:
     - name: Extract source package
       run: tar --strip-components=1 -xf bzip3-${{ github.sha}}.tar.gz
     - name: Configure
-      run: ./configure CC=${{ matrix.compiler }} --${{ matrix.feature }}
+      run: ./configure SHELL=bash CC=${{ matrix.compiler }} --${{ matrix.feature }}
     - name: Make
-      run: make
+      run: make || ls -al -R
     - name: Check
       run: make roundtrip
 
